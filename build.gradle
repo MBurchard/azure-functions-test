@@ -1,0 +1,90 @@
+plugins {
+  id 'com.github.ben-manes.versions' version "${benManesVersions}"
+  id 'org.springframework.boot' version "${springBootVersion}"
+  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'com.microsoft.azure.azurefunctions' version "${azureFunctionsPluginVersion}"
+  id 'java-library'
+  id 'idea'
+}
+
+def javaVersion = JavaVersion.VERSION_11
+
+group = 'com.uniper'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+
+configurations {
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+}
+
+dependencies {
+  annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+  implementation 'com.google.code.findbugs:jsr305:3.0.2',
+      "org.springframework.cloud:spring-cloud-starter-function-web:${springCloudVersion}",
+      "org.springframework.cloud:spring-cloud-function-adapter-azure:${springCloudVersion}",
+      "com.auth0:java-jwt:${javaJwtVersion}"
+      // works without the next line, does not work if the next line is uncommented
+      // "com.microsoft.graph:microsoft-graph:${microsoftGraphVersion}"
+
+  compileOnly "com.microsoft.azure.functions:azure-functions-java-library:${azureFunctionsVersion}"
+
+
+
+  testImplementation('org.springframework.boot:spring-boot-starter-test') {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
+}
+
+idea {
+  project {
+    languageLevel = javaVersion.toString()
+  }
+  module {
+    downloadJavadoc = true
+    downloadSources = true
+  }
+}
+
+azurefunctions {
+  allowTelemetry = false
+  appName = 'comstar-azure-functions'
+  resourceGroup = 'UCCS-PaaS-uat-rgp-001'
+}
+
+def isNonStable = { String version ->
+  def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
+  def regex = /^[0-9,.v-]+(-r)?$/
+  return !stableKeyword && !(version ==~ regex)
+}
+
+dependencyUpdates {
+  rejectVersionIf {
+    isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
+  }
+}
+
+jar {
+  enabled = true
+  manifest {
+    attributes 'Main-Class': 'com.uniper.comstar.ComSTARAzureFunctionsApplication'
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
+
+wrapper {
+  description "Regenerates the Gradle Wrapper files"
+  gradleVersion = '6.8.3'
+  distributionType = Wrapper.DistributionType.ALL
+}

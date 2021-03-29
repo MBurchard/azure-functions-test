@@ -1,0 +1,7 @@
+logging:
+  level:
+    com.uniper.comstar: debug
+
+spring:
+  profiles:
+    active: ${profile:test}
