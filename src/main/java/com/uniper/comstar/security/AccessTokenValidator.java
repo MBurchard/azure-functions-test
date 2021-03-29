@@ -1,10 +1,14 @@
 package com.uniper.comstar.security;
 
 import com.auth0.jwt.JWT;
+import com.microsoft.graph.http.GraphServiceException;
+import com.microsoft.graph.requests.GraphServiceClient;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -44,24 +48,24 @@ public class AccessTokenValidator {
         return false;
       }
 
-//      final var client = GraphServiceClient
-//          .builder()
-//          .authenticationProvider(requestUrl -> CompletableFuture.supplyAsync(() -> accessToken))
-//          .buildClient();
-//      final var user = client.me().buildRequest().get();
-//      if (user != null && Objects.equals(user.id, jwt.getClaim("oid").asString())) {
-//        LOG.debug("Valid access token for: {} ({})", user.displayName, user.id);
-////        validatedAccessTokens.put(accessToken, jwt.getExpiresAt());
-//        return true;
-//      }
-      LOG.warn("The Access Token seems to be valid, but the signature was not validated");
-      return true;
-//    } catch (final GraphServiceException ex) {
-//      if (ex.getServiceError() != null && "InvalidAuthenticationToken".equals(ex.getServiceError().code)) {
-//        LOG.debug(ex.getServiceError().message);
-//      } else {
-//        LOG.error("", ex);
-//      }
+      final var client = GraphServiceClient
+          .builder()
+          .authenticationProvider(requestUrl -> CompletableFuture.supplyAsync(() -> accessToken))
+          .buildClient();
+      final var user = client.me().buildRequest().get();
+      if (user != null && Objects.equals(user.id, jwt.getClaim("oid").asString())) {
+        LOG.debug("Valid access token for: {} ({})", user.displayName, user.id);
+//        validatedAccessTokens.put(accessToken, jwt.getExpiresAt());
+        return true;
+      }
+//      LOG.warn("The Access Token seems to be valid, but the signature was not validated");
+//      return true;
+    } catch (final GraphServiceException ex) {
+      if (ex.getServiceError() != null && "InvalidAuthenticationToken".equals(ex.getServiceError().code)) {
+        LOG.debug(ex.getServiceError().message);
+      } else {
+        LOG.error("", ex);
+      }
     } catch (final Throwable th) {
       LOG.error("unexpected error during MSGraph access", th);
     } finally {
