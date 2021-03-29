@@ -31,12 +31,11 @@ dependencies {
   implementation 'com.google.code.findbugs:jsr305:3.0.2',
       "org.springframework.cloud:spring-cloud-starter-function-web:${springCloudVersion}",
       "org.springframework.cloud:spring-cloud-function-adapter-azure:${springCloudVersion}",
-      "com.auth0:java-jwt:${javaJwtVersion}"
+      "com.auth0:java-jwt:${javaJwtVersion}",
       // works without the next line, does not work if the next line is uncommented
-      // "com.microsoft.graph:microsoft-graph:${microsoftGraphVersion}"
+      "com.microsoft.graph:microsoft-graph:${microsoftGraphVersion}"
 
   compileOnly "com.microsoft.azure.functions:azure-functions-java-library:${azureFunctionsVersion}"
-
 
 
   testImplementation('org.springframework.boot:spring-boot-starter-test') {
