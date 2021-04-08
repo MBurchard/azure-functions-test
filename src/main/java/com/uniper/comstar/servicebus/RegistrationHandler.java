@@ -1,6 +1,13 @@
 package com.uniper.comstar.servicebus;
 
-import com.microsoft.azure.functions.*;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+
+import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.HttpMethod;
+import com.microsoft.azure.functions.HttpRequestMessage;
+import com.microsoft.azure.functions.HttpResponseMessage;
+import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
@@ -9,9 +16,6 @@ import org.slf4j.Logger;
 import org.springframework.cloud.function.adapter.azure.FunctionInvoker;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
-
-import javax.annotation.Nonnull;
-import java.util.Optional;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -28,10 +32,10 @@ public class RegistrationHandler extends FunctionInvoker<SubscriptionRequest, St
     final String auth = request.getHeaders().get(HttpHeaders.AUTHORIZATION.toLowerCase());
     if (StringUtils.hasLength(auth) && auth.startsWith("Bearer ")) {
       try {
-      return request.createResponseBuilder(HttpStatus.OK)
-          .body(handleRequest(new SubscriptionRequest(auth.replace("Bearer ", "")), context))
-          .header("Content-Type", "application/json")
-          .build();
+        return request.createResponseBuilder(HttpStatus.OK)
+            .body(handleRequest(new SubscriptionRequest(auth.replace("Bearer ", "")), context))
+            .header("Content-Type", "application/json")
+            .build();
       } catch (final ForbiddenException ex) {
         return request.createResponseBuilder(HttpStatus.FORBIDDEN).build();
       } catch (final Throwable th) {

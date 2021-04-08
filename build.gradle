@@ -32,7 +32,8 @@ dependencies {
       "org.springframework.cloud:spring-cloud-starter-function-web:${springCloudVersion}",
       "org.springframework.cloud:spring-cloud-function-adapter-azure:${springCloudVersion}",
       "com.auth0:java-jwt:${javaJwtVersion}",
-      // works without the next line, does not work if the next line is uncommented
+      // "com.auth0:jwks-rsa:${jwksRsaVersion}",
+      "com.github.ben-manes.caffeine:caffeine",
       "com.microsoft.graph:microsoft-graph:${microsoftGraphVersion}"
 
   compileOnly "com.microsoft.azure.functions:azure-functions-java-library:${azureFunctionsVersion}"

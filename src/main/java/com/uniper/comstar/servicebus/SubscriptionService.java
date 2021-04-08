@@ -1,11 +1,11 @@
 package com.uniper.comstar.servicebus;
 
+import javax.annotation.Nonnull;
+
 import com.uniper.comstar.security.AccessTokenValidator;
 import com.uniper.comstar.security.ForbiddenException;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Nonnull;
 
 import static org.slf4j.LoggerFactory.getLogger;
 

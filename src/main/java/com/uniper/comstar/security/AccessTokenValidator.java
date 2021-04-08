@@ -1,14 +1,17 @@
 package com.uniper.comstar.security;
 
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import com.auth0.jwt.JWT;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.microsoft.graph.http.GraphServiceException;
 import com.microsoft.graph.requests.GraphServiceClient;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -16,6 +19,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class AccessTokenValidator {
   private static final Logger LOG = getLogger(AccessTokenValidator.class);
   private final SecurityConfig securityConfig;
+  private final Cache<String, Date> validatedAccessTokens = Caffeine.newBuilder()
+      .maximumSize(1000)
+      .expireAfterWrite(30, TimeUnit.MINUTES)
+      .build();
 
   public AccessTokenValidator(final SecurityConfig securityConfig) {
     this.securityConfig = securityConfig;
@@ -26,6 +33,17 @@ public class AccessTokenValidator {
     try {
       LOG.debug("validate: {}", accessToken);
       final var now = new Date();
+      final var validUntil = validatedAccessTokens.getIfPresent(accessToken);
+      if (validUntil != null) {
+        if (validUntil.after(now)) {
+          LOG.debug("access token validation from cache");
+          return true;
+        } else {
+          validatedAccessTokens.invalidate(accessToken);
+          LOG.debug("access token validation from cache has expired");
+          return false;
+        }
+      }
       final var jwt = JWT.decode(accessToken);
       if (!"RS256".equals(jwt.getAlgorithm())) {
         LOG.warn("wrong algorithm: {}", jwt.getAlgorithm());
@@ -55,11 +73,9 @@ public class AccessTokenValidator {
       final var user = client.me().buildRequest().get();
       if (user != null && Objects.equals(user.id, jwt.getClaim("oid").asString())) {
         LOG.debug("Valid access token for: {} ({})", user.displayName, user.id);
-//        validatedAccessTokens.put(accessToken, jwt.getExpiresAt());
+        validatedAccessTokens.put(accessToken, jwt.getExpiresAt());
         return true;
       }
-//      LOG.warn("The Access Token seems to be valid, but the signature was not validated");
-//      return true;
     } catch (final GraphServiceException ex) {
       if (ex.getServiceError() != null && "InvalidAuthenticationToken".equals(ex.getServiceError().code)) {
         LOG.debug(ex.getServiceError().message);
